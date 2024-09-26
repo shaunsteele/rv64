@@ -1,7 +1,4 @@
 
-# xilinx directory
-XLNX_DIR = /mnt/c/Xilinx
-
 # project directory
 REPO_DIR = /home/shaun/repos/rv64
 
