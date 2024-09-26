@@ -38,6 +38,8 @@ end
 
 
 /* instruction fetch */
+logic fetch_en;
+
 // read address control
 always_ff @(posedge clk) begin
   if (!rstn) begin
@@ -262,7 +264,7 @@ always_comb begin
 end
 
 
-/* upper instructions */
+/* upper instruction execution */
 // upper control
 logic upper_valid;
 logic pc_sel;
@@ -285,7 +287,7 @@ always_comb begin
 end
 
 
-/* jump instructions */
+/* jump instruction execution */
 always_comb begin
   jump_valid = opcode == OpUJump | opcode == OpIJump;
   jalr_sel = opcode == OpIJump;
@@ -308,7 +310,7 @@ always_comb begin
 end
 
 
-/* branch instructions */
+/* branch instruction execution */
 logic branch_check;
 always_comb begin
   branch_check = opcode == OpSBranch;
@@ -345,10 +347,206 @@ always_comb begin
 end
 
 
-/* register file write back */
-logic x0_exception;
+/* load instruction execution */
+logic load_valid;
+always_comb begin
+  load_valid = opcode == OpILoad;
+end
+
+// calculate address
+logic [XLEN-1:0]  load_base;
+logic assign load_base = src1;
+
+logic [XLEN-1:0]  load_offset;
+logic assign load_offset = immediate;
+
+logic [XLEN-1:0]  load_addr;
+always_comb begin
+  load_addr = load_base + load_offset;
+end
+
+logic load_misaligned_address_exception;
+assign load_misaligned_address_exception = load_addr[0];
+
+// read address channel
 always_ff @(posedge clk) begin
-  if (jump_addr && (jump_dest != 0)) begin
+  if (!rstn) begin
+    dm.arvalid <= 0;
+  end else begin
+    if (dm.arvalid) begin
+      dm.arvalid <= ~dm.arready;
+    end else begin
+      dm.arvalid <= load_valid;
+    end
+  end
+end
+
+always_ff @(posedge clk) begin
+  if (dm.arvalid && !dm.arvalid) begin
+    dm.araddr <= dm.araddr;
+  end else begin
+    dm.araddr <= load_addr;
+  end
+end
+
+assign dm.arprot = 3'b000;
+
+// read data channel
+always_ff @(posedge clk) begin
+  if (!rstn) begin
+    dm.rready <= ~dm.rvalid;
+  end else begin
+    dm.bready <= load_valid;
+  end
+end
+
+logic [XLEN-1:0]  load_data;
+always_ff @(posedge clk) begin
+  if (dm.rvalid && dm.rready) begin
+    load_data <= dm.rdata;
+  end else begin
+    load_data <= load_data;
+  end
+end
+
+logic [1:0] load_memory_read_error_exception;
+always_ff @(posedge clk) begin
+  if (!rstn) begin
+    load_memory_read_error_exception <= 0;
+  end else begin
+    if (dm.rvalid && dm.rready) begin
+      load_memory_read_error_exception <= dm.rresp;
+    end else begin
+      load_memory_read_error_exception <= load_memory_read_error_exception;
+    end
+  end
+end
+
+
+/* store instruction execution */
+logic store_valid;
+always_comb begin
+  store_valid = opcode == OpSStore;
+end
+
+logic [4:0] load_dest;
+assign load_dest = rd;
+
+// calculate address
+logic [XLEN-1:0]  store_base;
+assign store_base = src1;
+
+logic [XLEN-1:0]  store_offset;
+assign store_offset = immediate;
+
+logic [XLEN-1:0]  store_addr;
+always_comb begin
+  store_addr = store_base + store_offset;
+end
+
+logic store_misaligned_address_exception;
+assign store_misaligned_address_exception = store_addr[0];
+
+// write address channel
+always_ff @(posedge clk) begin
+  if (!rstn) begin
+    dm.awvalid <= 0;
+  end else begin
+    if (dm.awvalid) begin
+      dm.awvalid <= ~dm.awready;
+    end else begin
+      dm.awvalid <= store_valid;
+    end
+  end
+end
+
+always_ff @(posedge clk) begin
+  if (dm.awvalid && !dm.awready) begin
+    dm.awaddr <= dm.awaddr;
+  end else begin
+    dm.awaddr <= store_addr;
+  end
+end
+
+assign dm.awprot = 3'b000;
+
+// write data channel
+logic [XLEN-1:0] store_data;
+assign store_data = src2;
+
+always_ff @(posedge clk) begin
+  if (!rstn) begin
+    dm.wvalid <= 0;
+  end else begin
+    if (dm.wvalid) begin
+      dm.wvalid <= ~dm.wready;
+    end else begin
+      dm.wvalid <= store_valid;
+    end
+  end
+end
+
+always_ff @(posedge clk) begin
+  if (dm.wvalid && !dm.wready) begin
+    dm.wdata <= dm.wdata;
+  end else begin
+    dm.wdata <= store_data;
+  end
+end
+
+logic [2:0] store_width;
+assign store_width = funct3;
+
+always_ff @(posedge clk) begin
+  if (!rstn) begin
+    dm.wstrb <= {(XLEN){1'b1}};
+  end else begin
+    if (dm.wvalid && !dm.wready) begin
+      dm.wstrb <= dm.wstrb;
+    end else begin
+      unique case (store_width)
+        3'b000: dm.wstrb <= {(XLEN-1){1'b0}, 1'b1};
+        3'b001: dm.wstrb <= {(XLEN-2){1'b0}, 2'b11};
+        3'b010: dm.wstrb <= {(XLEN-4){1'b0}, 2'b1111};
+        3'b011: dm.wstrb <= {(XLEN){1'b1}};
+        default: dm.wstrb <= 0;
+      endcase
+    end
+  end
+end
+
+// write response channel
+always_ff @(posedge clk) begin
+  if (!rstn) begin
+    dm.bready <= 0;
+  end else begin
+    if (dm.bready) begin
+      dm.bready <= ~dm.bvalid;
+    end else begin
+      dm.bready <= store_valid;
+    end
+  end
+end
+
+logic [1:0] store_memory_write_error_exception;
+always_ff @(posedge clk) begin
+  if (!rstn) begin
+    store_data_exception <= 0;
+  end else begin
+    if (dm.bvalid && dm.bready) begin
+      store_memory_write_error_exception <= dm.bresp;
+    end else begin
+      store_memory_write_error_exception <= store_memory_write_error_exception;
+    end
+  end
+end
+
+
+/* register file write back */
+always_ff @(posedge clk) begin
+  if (load_valid && (load_dest != 0)) begin
+    x[load_dest] <= load_data;
+  end else if (jump_valid && (jump_dest != 0)) begin
     x[jump_dest] <= jump_ret_addr;
   end else if (upper_valid && (upper_dest != 0)) begin
     x[upper_dest] <= upper_res;
@@ -359,5 +557,19 @@ always_ff @(posedge clk) begin
   end
 end
 
+/* fetch control */
+always_comb begin
+  if (!rstn) begin
+    fetch_en = 0;
+  end else begin
+    if (load_valid && !(dm.rvalid && dm.rready)) begin
+      fetch_en = 0;
+    end else if (store_valid && !(dm.bvalid && dm.bready)) begin
+      fetch_en = 0;
+    end else begin
+      fetch_en = 1;
+    end
+  end
+end
 
 endmodule
