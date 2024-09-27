@@ -17,6 +17,25 @@ module rv64 # (
   axi_lite_if.M         dm
 );
 
+logic [XLEN-1:0]  fetch_pc;
+logic [XLEN-1:0]  fetch_pc_misalign;
+
+fetch # (
+  .XLEN (XLEN),
+  .RESET_ADDR (RESET_ADDR)
+) u_F (
+  .clk            (clk),
+  .rstn           (rstn),
+  .i_jump_valid   (),
+  .i_jump_addr    (),
+  .i_branch_valid (),
+  .i_branch_addr  (),
+  .i_halt         (),
+  .o_pc           (fetch_pc),
+  .o_pc_misalign  (fetch_pc_misalign),
+  .im_if          (im)
+);
+
 /* program counter */
 // control transfer signals
 logic jump_valid;
@@ -400,10 +419,30 @@ always_ff @(posedge clk) begin
   end
 end
 
+logic [2:0] load_width;
+assign load_width = funct3;
+
+localparam bit [2:0]  LoadByte = 3'b000;
+localparam bit [2:0]  LoadByteU = 3'b100;
+localparam bit [2:0]  LoadHalfword = 3'b001;
+localparam bit [2:0]  LoadHalfwordU = 3'b101;
+localparam bit [2:0]  LoadWord = 3'b010;
+localparam bit [2:0]  LoadWordU = 3'b110;
+localparam bit [2:0]  LoadDoubleword = 3'b011;
+
 logic [XLEN-1:0]  load_data;
 always_ff @(posedge clk) begin
   if (dm.rvalid && dm.rready) begin
-    load_data <= dm.rdata;
+    unique case (load_width)
+      LoadByte: load_data <= {(XLEN-8){dm.rdata[7]}, dm.rdata[7:0]};
+      LoadByteU: load_data <= {(XLEN-8){1'b0}, dm.rdata[7:0]};
+      LoadHalfword: load_data <= {(XLEN-16){dm.rdata[15]}, dm.rdata[15:0]};
+      LoadHalfwordU: load_data <= {(XLEN-16){1'b0}, dm.rdata[15:0]};
+      LoadWord: load_data <= {(XLEN-32){dm.rdata[31]}, dm.rdata[31:0]};
+      LoadWordU: load_data <= {(XLEN-32){1'b0}, dm.rdata[31:0]};
+      LoadDoubleword: load_data <= dm.rdata;
+      default: load_data <= dm.rdata;
+    endcase
   end else begin
     load_data <= load_data;
   end
@@ -497,6 +536,11 @@ end
 logic [2:0] store_width;
 assign store_width = funct3;
 
+localparam bit [2:0]  StoreByte = 3'b000;
+localparam bit [2:0]  StoreHalfword = 3'b001;
+localparam bit [2:0]  StoreWord = 3'b010;
+localparam bit [2:0]  StoreDoubleword = 3'b011;
+
 always_ff @(posedge clk) begin
   if (!rstn) begin
     dm.wstrb <= {(XLEN){1'b1}};
@@ -505,10 +549,10 @@ always_ff @(posedge clk) begin
       dm.wstrb <= dm.wstrb;
     end else begin
       unique case (store_width)
-        3'b000: dm.wstrb <= {(XLEN-1){1'b0}, 1'b1};
-        3'b001: dm.wstrb <= {(XLEN-2){1'b0}, 2'b11};
-        3'b010: dm.wstrb <= {(XLEN-4){1'b0}, 2'b1111};
-        3'b011: dm.wstrb <= {(XLEN){1'b1}};
+        StoreByte: dm.wstrb <= {(XLEN-1){1'b0}, 1'b1};
+        StoreHalfword: dm.wstrb <= {(XLEN-2){1'b0}, 2'b11};
+        StoreWord: dm.wstrb <= {(XLEN-4){1'b0}, 2'b1111};
+        StoreDoubleword: dm.wstrb <= {(XLEN){1'b1}};
         default: dm.wstrb <= 0;
       endcase
     end
