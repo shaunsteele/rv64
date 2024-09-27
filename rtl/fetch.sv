@@ -4,7 +4,7 @@
 
 module fetch # (
   parameter int XLEN = 64,
-  parameter int RESET_ADDR = 0,
+  parameter int RESET_ADDR = 'h1000,
   parameter int IALIGN = 4
 )(
   input var                     clk,

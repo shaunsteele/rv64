@@ -13,7 +13,7 @@ import fetch_pkg::*;
 
 // parameter configuration
 localparam int XLen = 64;
-localparam int ResetAddr = 0;
+localparam int ResetAddr = 'h1000;
 localparam int IAlign = 4;
 
 // clock

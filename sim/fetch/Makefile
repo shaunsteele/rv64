@@ -10,6 +10,7 @@ TCL_DIR := $(REPO_DIR)/tcl
 SRCS += $(SIM_DIR)/fetch/fetch_pkg.sv
 
 # environments
+SRCS += $(SIM_DIR)/fetch/fetch_env.sv
 
 # tests
 SRCS += $(SIM_DIR)/fetch/fetch_base_test.sv
