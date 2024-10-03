@@ -14,7 +14,7 @@ logic [XLEN-1:0]  jump_addr;
 logic             branch_valid;
 logic [XLEN-1:0]  branch_addr;
 
-logic             halt;
+logic             halt_n;
 logic [XLEN-1:0]  pc;
 logic             pc_misalign;
 

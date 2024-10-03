@@ -6,7 +6,15 @@ RTL_DIR := $(REPO_DIR)/rtl
 SIM_DIR := $(REPO_DIR)/sim
 TCL_DIR := $(REPO_DIR)/tcl
 
-# packages
+# axi lite agent
+SRCS += $(SIM_DIR)/s_axi_lite_uvm/s_axi_lite_pkg.sv
+SRCS += $(SIM_DIR)/s_axi_lite_uvm/axi_lite_seq_item.sv
+SRCS += $(SIM_DIR)/s_axi_lite_uvm/axi_lite_cfg.sv
+SRCS += $(SIM_DIR)/s_axi_lite_uvm/s_axi_lite_monitor.sv
+SRCS += $(SIM_DIR)/s_axi_lite_uvm/s_axi_lite_agent.sv
+SRCS += $(SIM_DIR)/s_axi_lite_uvm/axi_lite_if.sv
+
+# fetch agent
 SRCS += $(SIM_DIR)/fetch/fetch_pkg.sv
 
 # environments
@@ -16,7 +24,6 @@ SRCS += $(SIM_DIR)/fetch/fetch_env.sv
 SRCS += $(SIM_DIR)/fetch/fetch_base_test.sv
 
 # interfaces
-SRCS += $(SIM_DIR)/axi_lite_uvm/axi_lite_if.sv
 SRCS += $(SIM_DIR)/fetch/fetch_if.sv
 
 # rtl

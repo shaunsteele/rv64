@@ -4,10 +4,10 @@
 
 `include "uvm_macros.svh"
 
-
 module tb_fetch;
 
 import uvm_pkg::*;
+import s_axi_lite_pkg::*;
 import fetch_pkg::*;
 
 
@@ -15,6 +15,8 @@ import fetch_pkg::*;
 localparam int XLen = 64;
 localparam int ResetAddr = 'h1000;
 localparam int IAlign = 4;
+localparam int IMAlen = 64;
+localparam int IMDlen = 32;
 
 // clock
 localparam int TClk = 10;
@@ -38,7 +40,7 @@ end
 
 // interfaces
 fetch_if #(.XLEN(XLen)) f (.clk(clk), .rstn(rstn));
-axi_lite_if #(.ALEN(XLen)) im (.aclk(clk), .aresetn(rstn));
+axi_lite_if #(.ALEN(XLen), .DLEN(32)) im (.aclk(clk), .aresetn(rstn));
 
 // DUT
 fetch # (
@@ -52,7 +54,7 @@ fetch # (
   .i_jump_addr    (f.jump_addr),
   .i_branch_valid (f.branch_valid),
   .i_branch_addr  (f.branch_addr),
-  .i_halt         (f.halt),
+  .i_halt_n       (f.halt_n),
   .o_pc           (f.pc),
   .o_pc_misalign  (f.pc_misalign),
   .im_if          (im)
@@ -63,7 +65,7 @@ initial begin
   f.jump_addr = 0;
   f.branch_valid = 0;
   f.branch_addr = 0;
-  f.halt = 0;
+  f.halt_n = 0;
   im.arready = 0;
 
   uvm_config_db #(virtual fetch_if#(.XLEN(XLen)))::set(null, "*", "f", f);
