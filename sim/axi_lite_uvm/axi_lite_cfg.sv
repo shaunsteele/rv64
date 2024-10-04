@@ -11,7 +11,7 @@ string if_string = "axi_lite_if_64_64";
 
 function new(string name="axi_lite_cfg");
   super.new(name);
-  `uvm_info("AXI LITE CFG", "constructor", UVM_LOW)
+  `uvm_info(get_name(), "constructor", UVM_LOW)
 endfunction
 
 endclass

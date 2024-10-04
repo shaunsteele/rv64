@@ -21,21 +21,13 @@ endfunction
 function void build_phase(uvm_phase phase);
   super.build_phase(phase);
   `uvm_info(get_name(), "build_phase", UVM_LOW)
-  // if (!uvm_config_db #(virtual axi_lite_if)::get(this, "", "axi_vif", vif)) begin
-  //   `uvm_fatal("S AXI LITE MONITOR", "Failed to get vif instance")
-  // end
-  // if (!uvm_config_db#(axi_lite_cfg)::get(this,"*","axi_lite_cfg",cfg)) begin
-  //   `uvm_fatal("S AXI LITE MONITOR", "Failed to get configuration")
-  // end
 endfunction
 
 virtual task read_address(ref axi_lite_seq_item txn);
-  // if (cfg.aren) begin
-  //   wait (vif.arvalid && vif.arready);
-  //   @(negedge vif.aclk);
-  //   txn.araddr = vif.araddr;
-  //   txn.arprot = vif.arprot;
-  // end
+  wait (vif.arvalid && vif.arready);
+  @(negedge vif.aclk);
+  txn.araddr = vif.araddr;
+  txn.arprot = vif.arprot;
 endtask
 
 virtual task read_data(ref axi_lite_seq_item txn);
@@ -54,7 +46,7 @@ virtual task run_phase(uvm_phase phase);
   forever begin
     txn = axi_lite_seq_item::type_id::create("txn", this);
     // fork
-    //   read_address(txn);
+      read_address(txn);
     //   read_data(txn);
     // join
     mon_ap.write(txn);

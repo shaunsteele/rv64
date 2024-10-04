@@ -41,8 +41,10 @@ COMP_ARGS += --incr --relax
 COMP_ARGS += -L uvm
 
 ELAB_ARGS += -L uvm
+# ELAB_ARGS += -v 1
 
 SIM_ARGS += -testplusarg UVM_VERBOSITY=UVM_LOW
+SIM_ARGS += -testplusarg UVM_CONFIG_TRACE
 
 TOP = tb_fetch
 

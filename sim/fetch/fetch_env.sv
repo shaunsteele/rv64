@@ -20,8 +20,8 @@ function void build_phase(uvm_phase phase);
   `uvm_info("ENV", "build_phase", UVM_LOW)
 
   im_agent = axi_lite_agent::type_id::create("im_agent", this);
-  // uvm_config_db#(axi_lite_cfg)::set(this,"im_agent*", "axi_lite_cfg", im_cfg);
-  im_agent.cfg.if_string = im_if_string;
+  
+  uvm_config_db#(string)::set(null,"*", "axi_lite_if_string", im_if_string);
 endfunction
 
 function void connect_phase(uvm_phase phase);
