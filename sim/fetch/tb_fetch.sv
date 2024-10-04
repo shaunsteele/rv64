@@ -7,7 +7,7 @@
 module tb_fetch;
 
 import uvm_pkg::*;
-import s_axi_lite_pkg::*;
+import axi_lite_pkg::*;
 import fetch_pkg::*;
 
 
@@ -15,8 +15,8 @@ import fetch_pkg::*;
 localparam int XLen = 64;
 localparam int ResetAddr = 'h1000;
 localparam int IAlign = 4;
-localparam int IMAlen = 64;
-localparam int IMDlen = 32;
+localparam int IMALen = XLen;
+localparam int IMDLen = 32;
 
 // clock
 localparam int TClk = 10;
@@ -40,7 +40,7 @@ end
 
 // interfaces
 fetch_if #(.XLEN(XLen)) f (.clk(clk), .rstn(rstn));
-axi_lite_if #(.ALEN(XLen), .DLEN(32)) im (.aclk(clk), .aresetn(rstn));
+axi_lite_if #(.ALEN(IMALen), .DLEN(IMDLen)) im (.aclk(clk), .aresetn(rstn));
 
 // DUT
 fetch # (
@@ -69,9 +69,10 @@ initial begin
   im.arready = 0;
 
   uvm_config_db #(virtual fetch_if#(.XLEN(XLen)))::set(null, "*", "f", f);
-  uvm_config_db #(virtual axi_lite_if#(.ALEN(XLen)))::set(null, "*", "im", im);
+  // uvm_config_db #(virtual axi_lite_if#(.XLEN(XLen)))::set(null, "*", "axi_vif", im);
+  im.use_concrete_class();
 
-  run_test("fetch_base_test");
+  uvm_top.run_test("fetch_base_test");
 end
 
 endmodule

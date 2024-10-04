@@ -11,6 +11,8 @@ interface axi_lite_if # (
   input var aresetn
 );
 
+import axi_lite_pkg::*;
+
 // write address channel
 logic             awvalid;
 logic             awready;
@@ -57,5 +59,13 @@ modport S (
   input arvalid, araddr, arprot, output arready,
   input rready, output rvalid, rdata, rresp
 );
+
+function void use_concrete_class();
+  string path_name;
+  path_name = $sformatf("*.axi_lite_if_%0d_%0d", ALEN, DLEN);
+  axi_lite_if_base::type_id::set_inst_override(
+    axi_lite_if_class#(ALEN,DLEN,SLEN)::get_type(), path_name, null
+  );
+endfunction
 
 endinterface
