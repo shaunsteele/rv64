@@ -1,17 +1,19 @@
-// fetch_base_test.sv
+// fetch_test_base.sv
 
-`ifndef __FETCH_BASE_TEST
-`define __FETCH_BASE_TEST
+`ifndef __FETCH_TEST_BASE
+`define __FETCH_TEST_BASE
 
-class fetch_base_test extends uvm_test;
+class fetch_test_base extends uvm_test;
 
-`uvm_component_utils(fetch_base_test)
+`uvm_component_utils(fetch_test_base)
 
 fetch_env env;
+// env configuration
+// axi lite configuration
 
-function new(string name="fetch_base_test", uvm_component parent);
+function new(string name="fetch_test_base", uvm_component parent);
   super.new(name, parent);
-  `uvm_info("TEST", "top level fetch_base_test constructor", UVM_LOW);
+  `uvm_info("TEST", "top level fetch_test_base constructor", UVM_LOW);
 endfunction
 
 function void build_phase(uvm_phase phase);

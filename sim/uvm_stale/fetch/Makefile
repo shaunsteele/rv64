@@ -6,9 +6,27 @@ RTL_DIR := $(REPO_DIR)/rtl
 SIM_DIR := $(REPO_DIR)/sim
 TCL_DIR := $(REPO_DIR)/tcl
 
+# axi lite agent
+SRCS += $(SIM_DIR)/axi_lite_uvm/axi_lite_pkg.sv
 SRCS += $(SIM_DIR)/axi_lite_uvm/axi_lite_if.sv
+SRCS += $(SIM_DIR)/axi_lite_uvm/axi_lite_seq_item.sv
+SRCS += $(SIM_DIR)/axi_lite_uvm/axi_lite_cfg.sv
+SRCS += $(SIM_DIR)/axi_lite_uvm/axi_lite_monitor.sv
+SRCS += $(SIM_DIR)/axi_lite_uvm/axi_lite_agent.sv
+
+# fetch agent
+SRCS += $(SIM_DIR)/fetch/fetch_pkg.sv
+SRCS += $(SIM_DIR)/fetch/fetch_seq_item.sv
+SRCS += $(SIM_DIR)/fetch/fetch_agent.sv
+
+# environments
+SRCS += $(SIM_DIR)/fetch/fetch_env.sv
+
+# tests
+SRCS += $(SIM_DIR)/fetch/fetch_test_base.sv
+
+# interfaces
 SRCS += $(SIM_DIR)/fetch/fetch_if.sv
-SRCS += $(SIM_DIR)/exception/exception_if.sv
 
 # rtl
 SRCS += $(RTL_DIR)/fetch.sv
@@ -20,13 +38,13 @@ INCLUDES :=
 DEFINES := 
 
 COMP_ARGS += --incr --relax
-# COMP_ARGS += -L uvm
+COMP_ARGS += -L uvm
 
-# ELAB_ARGS += -L uvm
+ELAB_ARGS += -L uvm
 # ELAB_ARGS += -v 1
 
-# SIM_ARGS += -testplusarg UVM_VERBOSITY=UVM_LOW
-# SIM_ARGS += -testplusarg UVM_CONFIG_TRACE
+SIM_ARGS += -testplusarg UVM_VERBOSITY=UVM_LOW
+SIM_ARGS += -testplusarg UVM_CONFIG_TRACE
 
 TOP = tb_fetch
 

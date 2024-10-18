@@ -9,13 +9,12 @@ interface fetch_if # (
   input var rstn
 );
 
-logic             halt_n;
 logic             jump_valid;
 logic [XLEN-1:0]  jump_addr;
 logic             branch_valid;
 logic [XLEN-1:0]  branch_addr;
 
-logic             pc_valid;
+logic             halt_n;
 logic [XLEN-1:0]  pc;
 logic             pc_misalign;
 
