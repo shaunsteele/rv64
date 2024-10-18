@@ -10,16 +10,18 @@ module fetch # (
   input var                     clk,
   input var                     rstn,
 
+  input var                     i_halt_n,
+
   input var                     i_jump_valid,
   input var         [XLEN-1:0]  i_jump_addr,
   input var                     i_branch_valid,
   input var         [XLEN-1:0]  i_branch_addr,
 
-  input var                     i_halt_n,
+  output var logic              o_pc_valid,
   output var logic  [XLEN-1:0]  o_pc,
-  output var logic              o_pc_misalign,
+  output var logic              o_pc_addr_misalign,
 
-  axi_lite_if.M                 im_if
+  axi_lite_if.M                 if_im
 );
 
 // TODO: think out halt logic
@@ -44,7 +46,7 @@ always_ff @(posedge clk) begin
   if (!rstn) begin
     pc <= RESET_ADDR;
   end else begin
-    if (im_if.arvalid && !im_if.arready) begin
+    if (if_im.arvalid && !if_im.arready) begin
       pc <= pc;
     end else begin
       pc <= next_pc;
@@ -52,28 +54,29 @@ always_ff @(posedge clk) begin
   end
 end
 
+assign o_pc_valid = if_im.arvalid;
 assign o_pc = pc;
 
 always_comb begin
-  o_pc_misalign = |pc[1:0];
+  o_pc_addr_misalign = |pc[1:0];
 end
 
 
 /* instruction fetch */
 always_ff @(posedge clk) begin
   if (!rstn) begin
-    im_if.arvalid <= 0;
+    if_im.arvalid <= 0;
   end else begin
-    if (im_if.arvalid) begin
-      im_if.arvalid <= im_if.arready | i_halt_n;
+    if (if_im.arvalid) begin
+      if_im.arvalid <= if_im.arready | i_halt_n;
     end else begin
-      im_if.arvalid <= i_halt_n;
+      if_im.arvalid <= i_halt_n;
     end
   end
 end
 
-assign im_if.araddr = pc;
-assign im_if.arprot = 3'b100; // instruction protection
+assign if_im.araddr = pc;
+assign if_im.arprot = 3'b100; // instruction protection
 
 
 
