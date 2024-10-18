@@ -3,15 +3,14 @@
 `default_nettype none
 
 interface axi_lite_if # (
-  parameter int ALEN = 32,
-  parameter int DLEN = 32,
-  parameter int SLEN = DLEN / 8
+  parameter int ALEN = 64,
+  parameter int DLEN = 64
 )(
   input var aclk,
   input var aresetn
 );
 
-import axi_lite_pkg::*;
+localparam int SLen = DLEN / 8;
 
 // write address channel
 logic             awvalid;
@@ -23,7 +22,7 @@ logic [2:0]       awprot;
 logic             wvalid;
 logic             wready;
 logic [DLEN-1:0]  wdata;
-logic [SLEN-1:0]  wstrb;
+logic [SLen-1:0]  wstrb;
 
 // write response channel
 logic             bvalid;
@@ -42,6 +41,7 @@ logic             rready;
 logic [DLEN-1:0]  rdata;
 logic [1:0]       rresp;
 
+// modports
 modport M (
   input aclk, aresetn,
   output awvalid, awaddr, awprot, input awready,
@@ -60,12 +60,5 @@ modport S (
   input rready, output rvalid, rdata, rresp
 );
 
-function void use_concrete_class();
-  string path_name;
-  path_name = $sformatf("*.axi_lite_if_%0d_%0d", ALEN, DLEN);
-  axi_lite_if_base::type_id::set_inst_override(
-    axi_lite_if_class#(ALEN,DLEN,SLEN)::get_type(), path_name, null
-  );
-endfunction
 
 endinterface
